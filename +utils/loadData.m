@@ -4,8 +4,8 @@ function [timeArray, output] = loadData(filename)
 opts = detectImportOptions(filename, 'NumHeaderLines', 2);
 rawData = readcell(filename, opts);
 
-% Time values are under the first column, starting from row 6
-timeArray = cell2mat(rawData(6:end, 1));
+% Time values are under the second column, starting from row 6
+timeArray = cell2mat(rawData(6:end, 2));
 
 % Cut out the first 2 columns to get the non-time data
 rawData = rawData(:,3:end);

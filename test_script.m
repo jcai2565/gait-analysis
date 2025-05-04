@@ -7,17 +7,20 @@ filename1 = 'data/Emma_take01_walk.csv';
 
 % 1. Zeros mean from x, y position data so that origin is on person center
 % (treadmill).
-names = fieldnames(output);
-for i = 1:numel(names)
-    name = names{i};
-
-    if isfield(output.(name), 'Position_X')
-        output.(name).Position_X = zeroMean(output.(name).Position_X);
-    end
-    if isfield(output.(name), 'Position_Y')
-        output.(name).Position_Y = zeroMean(output.(name).Position_Y);
-    end
-end
+% names = fieldnames(output);
+% for i = 1:numel(names)
+%     name = names{i};
+% 
+%     if isfield(output.(name), 'Position_X')
+%         output.(name).Position_X = zeroMean(output.(name).Position_X);
+%     end
+%     if isfield(output.(name), 'Position_Y')
+%         output.(name).Position_Y = zeroMean(output.(name).Position_Y);
+%     end
+%     if isfield(output.(name), 'Position_Z')
+%         output.(name).Position_Z = zeroMean(output.(name).Position_Z);
+%     end
+% end
 
 % Final usage: output1.Hip.Rotation_X , etc...
 
