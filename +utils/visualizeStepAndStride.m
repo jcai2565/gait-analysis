@@ -1,5 +1,5 @@
 function [avgStepTime, avgStrideTimeL, avgStrideTimeR, avgStepDistance, avgStrideDistanceL, avgStrideDistanceR]...
-    = visualizeStepAndStride(time, output, treadmillSpeed, index)
+    = visualizeStepAndStride(time, output, treadmillSpeed, index, plotFlag)
 % Input:
 % [output], the struct resulting from processing
 % [treadmillSpeed], a known scalar based on the data, either 1.8 or 2.5
@@ -172,7 +172,9 @@ end
 
 
 % Optional: plot for visual inspection
-%plotFeetSubplots(time, output, index, treadmillSpeed)
+if (plotFlag == true)
+    plotFeetSubplots(time, output, index, treadmillSpeed)
+end
 
 end
 
