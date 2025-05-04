@@ -49,7 +49,10 @@ for j = 1:n
     
     %% 2. Calculate stride metrics
     utils.visualizeStepAndStride(timeArrays{j}, outputs{j}, treadmillSpeeds(j), j);
-
+    
+    %% Compute Stance and SLS data
+    [stanceR, stanceL, slsR, slsL] = utils.computeStanceAndSLS(timeArrays{j}, outputs{j});
+    
 end
 
 %% 
