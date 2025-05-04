@@ -1,7 +1,7 @@
 function [avgStepTime, avgStrideTimeL, avgStrideTimeR, avgStepDistance, avgStrideDistanceL, avgStrideDistanceR]...
-    = visualizeStepAndStride(time, output, treadmillSpeed, index, plotFlag)
+    = visualizeStepAndStride(time, struct, treadmillSpeed, index, plotFlag)
 % Input:
-% [output], the struct resulting from processing
+% [output], the struct loaded from data
 % [treadmillSpeed], a known scalar based on the data, either 1.8 or 2.5
 % miles per hour according to the treadmill used
 % [index], the index of the struct corresponding to the filename index in
@@ -15,6 +15,10 @@ function [avgStepTime, avgStrideTimeL, avgStrideTimeR, avgStepDistance, avgStrid
 %
 
 % Steps:
+
+% Step 0: Zero mean our data
+output = utils.zeroMeansFromStruct(struct);
+
 % Step 1: Estimate step time from foot Y positions
 fprintf('--- Trial %d (%.1f mph) ---\n', index, treadmillSpeed);
 

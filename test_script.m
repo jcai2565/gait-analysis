@@ -31,26 +31,12 @@ end
 
 % Index for filenames
 for j = 1:n
-    %1. Zeros mean from x, z position data (ground plane) so that origin is on person center
-    % @(treadmill).
-    names = fieldnames(outputs{j});
-    % Index for struct names
-    for i = 1:numel(names)
-        name = names{i};
-        if isfield(outputs{j}.(name), 'Position_X')
-            outputs{j}.(name).Position_X = zeroMean(outputs{j}.(name).Position_X);
-        end
-        if isfield(outputs{j}.(name), 'Position_Z')
-            outputs{j}.(name).Position_Z = zeroMean(outputs{j}.(name).Position_Z);
-        end
-    end
-    
     % Final usage: outputs{i}.Hip.Rotation_X , etc...
-    
+
     %% 2. Calculate relevant metrics - uncomment to use
 
     % Calculate stride metrics
-    % utils.visualizeStepAndStride(timeArrays{j}, outputs{j}, treadmillSpeeds(j), j, false);
+    utils.visualizeStepAndStride(timeArrays{j}, outputs{j}, treadmillSpeeds(j), j, true);
     % utils.getSideToSide(timeArrays{j}, outputs{j});
     
     % Compute Stance and SLS data
@@ -60,10 +46,4 @@ for j = 1:n
     
 end
 
-%% 
-% -------------------------Tiny Helper Functions-------------------------%
-
-function out = zeroMean(x)
-    out = x - mean(x, 'omitnan');  % omitnan in case of missing values
-end
 
