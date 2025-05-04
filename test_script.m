@@ -47,13 +47,16 @@ for j = 1:n
     
     % Final usage: outputs{i}.Hip.Rotation_X , etc...
     
-    %% 2. Calculate relevant metrics
+    %% 2. Calculate relevant metrics - uncomment to use
 
     % Calculate stride metrics
-    utils.visualizeStepAndStride(timeArrays{j}, outputs{j}, treadmillSpeeds(j), j, false);
+    % utils.visualizeStepAndStride(timeArrays{j}, outputs{j}, treadmillSpeeds(j), j, false);
+    % utils.getSideToSide(timeArrays{j}, outputs{j});
     
     % Compute Stance and SLS data
     %[stanceR, stanceL, slsR, slsL] = utils.computeStanceAndSLS(timeArrays{j}, outputs{j});
+
+    
     
 end
 
