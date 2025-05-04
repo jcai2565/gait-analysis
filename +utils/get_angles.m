@@ -1,15 +1,8 @@
-% Function calculating angles
-% v = [x_knee(i) - x_hip(i), z_knee(i) - z_hip(i)], data from csv file
-% axis_vec is the reference (z axis)
-function angle_deg = vector_angle_to_axis(v, axis_vec) 
-    if norm(v) == 0
-        angle_deg = 0;
-    else
-        angle_deg = rad2deg(acos(dot(v, axis_vec) / (norm(v) * norm(axis_vec))));
-    end
-end
-
 % Funtion returning all angles
+% Input: 1-D vectors corresponding to the position vectors of named markers
+% Output: [angles], a Nx3 array, where N is the length of 1-D input
+% vectors, that stores the [hip-to-knee, from vertical, knee-to-ankle, from
+% vertical, and ankle-toe, from horizontal] (CCW positive)
 function angles = get_angles(x_hip, y_hip, z_hip, ...
                              x_knee, y_knee, z_knee, ...
                              x_ankle, y_ankle, z_ankle, ...
@@ -29,5 +22,16 @@ function angles = get_angles(x_hip, y_hip, z_hip, ...
         foot_angle = vector_angle_to_axis(ankle_toe, ref_axis);
 
         angles(i, :) = [hip_angle, knee_angle, foot_angle];
+    end
+end
+
+% Function calculating angles
+% v = [x_knee(i) - x_hip(i), z_knee(i) - z_hip(i)], data from csv file
+% axis_vec is the reference (z axis)
+function angle_deg = vector_angle_to_axis(v, axis_vec) 
+    if norm(v) == 0
+        angle_deg = 0;
+    else
+        angle_deg = rad2deg(acos(dot(v, axis_vec) / (norm(v) * norm(axis_vec))));
     end
 end
