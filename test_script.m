@@ -1,39 +1,57 @@
 %% Script to Analyze Gait Data
 clear;
-
-% Load the raw CSV data
-filename1 = 'data/Emma_take01_walk.csv';
-[timeArray, output] = utils.loadData(filename1);
-
-% 1. Zeros mean from x, y position data so that origin is on person center
-% (treadmill).
-% names = fieldnames(output);
-% for i = 1:numel(names)
-%     name = names{i};
-% 
-%     if isfield(output.(name), 'Position_X')
-%         output.(name).Position_X = zeroMean(output.(name).Position_X);
-%     end
-%     if isfield(output.(name), 'Position_Y')
-%         output.(name).Position_Y = zeroMean(output.(name).Position_Y);
-%     end
-%     if isfield(output.(name), 'Position_Z')
-%         output.(name).Position_Z = zeroMean(output.(name).Position_Z);
-%     end
-% end
-
-% Final usage: output1.Hip.Rotation_X , etc...
-
-%% 2. Graph angle and position
-
 close all;
 
-% Control what to plot
-useWhitelist = true;
-whitelist = ["Hip","RKNE","RTOE"];
+% Load the raw CSV data
+filenames = {
+    'data/Emma_take01_walk.csv',
+    'data/Emma_take02_walk.csv',
+    'data/Emma_take03_walkH.csv',
+    'data/Emma_take04_walkH.csv',
+    %'data/Emma_take05_skates.csv', 
+    % skate data has unknown speed, just for fun
+    %'data/Emma_take06_skates.csv'
+};
 
-% utils.graphPositionSubplots(output, whitelist, useWhitelist);
-utils.visualizeStepAndStride(timeArray, output, 1.8);
+% mph
+treadmillSpeeds = [
+    1.8, 
+    2.5, 
+    1.8, 
+    2.5
+    ];
+
+n = numel(filenames);
+timeArrays = cell(1, n);
+outputs = cell(1, n);
+
+for i = 1:n
+    [timeArrays{i}, outputs{i}] = utils.loadData(filenames{i});
+end
+
+% Index for filenames
+for j = 1:n
+    %1. Zeros mean from x, z position data (ground plane) so that origin is on person center
+    % @(treadmill).
+    names = fieldnames(outputs{j});
+    % Index for struct names
+    for i = 1:numel(names)
+        name = names{i};
+        if isfield(outputs{j}.(name), 'Position_X')
+            outputs{j}.(name).Position_X = zeroMean(outputs{j}.(name).Position_X);
+        end
+        if isfield(outputs{j}.(name), 'Position_Z')
+            outputs{j}.(name).Position_Z = zeroMean(outputs{j}.(name).Position_Z);
+        end
+    end
+    
+    % Final usage: outputs{i}.Hip.Rotation_X , etc...
+    
+    %% 2. Calculate stride metrics
+    utils.visualizeStepAndStride(timeArrays{j}, outputs{j}, treadmillSpeeds(j), j);
+
+end
+
 %% 
 % -------------------------Tiny Helper Functions-------------------------%
 
@@ -41,15 +59,3 @@ function out = zeroMean(x)
     out = x - mean(x, 'omitnan');  % omitnan in case of missing values
 end
 
-function out = subtractMin(z)
-    % subtractMin - Shifts a Z vector so that its minimum value is 0
-    %
-    % Input:  z - 1D numeric vector
-    % Output: out - z shifted so min(z) = 0
-
-    if ~isvector(z)
-        error('InputError:Not1DVector', 'Input must be a 1D vector.');
-    end
-
-    out = z - min(z);
-end

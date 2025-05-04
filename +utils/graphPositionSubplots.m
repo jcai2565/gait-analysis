@@ -2,6 +2,13 @@
 % field that is in [whitelist].
 
 function graphPositionSubplots(output, whitelist, useWhitelist)
+
+%%% Usage:
+% % Control what to plot
+%     useWhitelist = true;
+%     whitelist = ["Hip","RKNE","RTOE"];
+% utils.graphPositionSubplots(struct, whitelist, useWhitelist);
+
 % Construct a cell array of X, Y, and Z for elements in whitelist
 if useWhitelist
     N = numel(whitelist);
