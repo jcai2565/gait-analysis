@@ -1,4 +1,5 @@
-function visualizeStepAndStride(time, output, treadmillSpeed, index)
+function [avgStepTime, avgStrideTimeL, avgStrideTimeR, avgStepDistance, avgStrideDistanceL, avgStrideDistanceR]...
+    = visualizeStepAndStride(time, output, treadmillSpeed, index)
 % Input:
 % [output], the struct resulting from processing
 % [treadmillSpeed], a known scalar based on the data, either 1.8 or 2.5
@@ -55,29 +56,127 @@ for k = 1:size(pairs, 1)
         stepIntervals = diff(allSteps);
         stepIntervals = stepIntervals(stepIntervals > 0.2 & stepIntervals < 2.0);
 
-        % % Report if we have valid data
-        % if ~isempty(strideTimesR) && ~isempty(strideTimesL) && ~isempty(stepIntervals)
-        %     avgStrideR = mean(strideTimesR);
-        %     avgStrideL = mean(strideTimesL);
-        %     avgStep    = mean(stepIntervals);
-        % 
-        %     fprintf('%s - Avg Stride Time: %.3f s\n', right, avgStrideR);
-        %     fprintf('%s - Avg Stride Time: %.3f s\n', left, avgStrideL);
-        %     fprintf('%s/%s - Avg Step Time (alternating): %.3f s\n\n', right, left, avgStep);
-        % else
-        %     fprintf('%s/%s - Not enough valid peaks for stride/step timing.\n\n', right, left);
-        % end
+        % Report if we have valid data
+        if ~isempty(strideTimesR) && ~isempty(strideTimesL) && ~isempty(stepIntervals)
+            avgStrideTimeR = mean(strideTimesR);
+            avgStrideTimeL = mean(strideTimesL);
+            avgStepTime    = mean(stepIntervals);
+
+            % fprintf('%s - Avg Stride Time: %.3f s\n', right, avgStrideR);
+            % fprintf('%s - Avg Stride Time: %.3f s\n', left, avgStrideL);
+            % fprintf('%s/%s - Avg Step Time (alternating): %.3f s\n\n', right, left, avgStep);
+        else
+            fprintf('%s/%s - Not enough valid peaks for stride/step timing.\n\n', right, left);
+        end
 
     else
         fprintf('%s/%s - Missing Y-position data.\n\n', right, left);
     end
 end
 
+% Convert treadmill speed from mph to m/s
+treadmillSpeed_mps = treadmillSpeed * 0.44704;
+
+% Compute displacement for RIGHT foot
+if numel(timeR) >= 2 && isfield(output.(right), 'Position_X')
+    xR = output.(right).Position_X;
+    dxR = [];
+
+    for s = 1:(numel(timeR)-1)
+        t1 = timeR(s);
+        t2 = timeR(s+1);
+        i1 = find(time >= t1, 1, 'first');
+        i2 = find(time >= t2, 1, 'first');
+        if isempty(i1) || isempty(i2), continue; end
+
+        x_disp = xR(i2) - xR(i1);
+        treadmill_disp = treadmillSpeed_mps * (t2 - t1);
+        corrected_disp = x_disp + treadmill_disp;
+
+        dxR(end+1) = corrected_disp;
+    end
+
+    if ~isempty(dxR)
+        avgStrideDistanceR = mean(dxR);
+        fprintf('%s - Avg Corrected Stride Displacement (X): %.3f m\n', right, avgStrideDistanceR);
+    end
+end
+
+% Compute displacement for LEFT foot
+if numel(timeL) >= 2 && isfield(output.(left), 'Position_X')
+    xL = output.(left).Position_X;
+    dxL = [];
+
+    for s = 1:(numel(timeL)-1)
+        t1 = timeL(s);
+        t2 = timeL(s+1);
+        i1 = find(time >= t1, 1, 'first');
+        i2 = find(time >= t2, 1, 'first');
+        if isempty(i1) || isempty(i2), continue; end
+
+        x_disp = xL(i2) - xL(i1);
+        treadmill_disp = treadmillSpeed_mps * (t2 - t1);
+        corrected_disp = x_disp + treadmill_disp;
+
+        dxL(end+1) = corrected_disp;
+    end
+
+    if ~isempty(dxL)
+        avgStrideDistanceL = mean(dxL);
+        fprintf('%s - Avg Corrected Stride Displacement (X): %.3f m\n', left, avgStrideDistanceL);
+    end
+end
+
+% STEP DISTANCE (alternating feet with X correction)
+if numel(timeR) >= 1 && numel(timeL) >= 1 && ...
+   isfield(output.(right), 'Position_X') && isfield(output.(left), 'Position_X')
+
+    allSteps = sort([timeR; timeL]);
+    dxStep = [];
+
+    % Determine origin of each time point (right or left)
+    allFootLabels = [repmat({'R'}, numel(timeR), 1); repmat({'L'}, numel(timeL), 1)];
+    allFootTimes = [timeR; timeL];
+    [sortedTimes, sortIdx] = sort(allFootTimes);
+    sortedFeet = allFootLabels(sortIdx);
+
+    for s = 1:(length(sortedTimes) - 1)
+        t1 = sortedTimes(s);
+        t2 = sortedTimes(s+1);
+        f1 = sortedFeet{s};
+        f2 = sortedFeet{s+1};
+
+        % Skip if same foot (not a step)
+        if strcmp(f1, f2), continue; end
+
+        i1 = find(time >= t1, 1, 'first');
+        i2 = find(time >= t2, 1, 'first');
+        if isempty(i1) || isempty(i2), continue; end
+
+        % Get correct X values
+        x1 = output.([f1 'Foot']).Position_X(i1);
+        x2 = output.([f2 'Foot']).Position_X(i2);
+
+        treadmill_disp = treadmillSpeed_mps * (t2 - t1);
+        corrected_step = x2 - x1 + treadmill_disp;
+        dxStep(end+1) = corrected_step;
+    end
+
+    if ~isempty(dxStep)
+        avgStepDistance = mean(dxStep);
+        fprintf('Interleaved Step Distance (X): %.3f m\n', avgStepDistance);
+    else
+        fprintf('No valid alternating step distances computed.\n');
+    end
+end
+
 
 % Optional: plot for visual inspection
-plotFeetSubplots(time, output, index, treadmillSpeed)
+%plotFeetSubplots(time, output, index, treadmillSpeed)
 
 end
+
+%% Helper plot function
 
 function plotFeetSubplots(time, output, index, treadmillSpeed)
 
