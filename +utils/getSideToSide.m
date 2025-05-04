@@ -1,40 +1,71 @@
-function stsWidth = getSideToSide(time, output)
-% Computes side-to-side width as max - min of Z-position for each limb
-% Returns struct of widths per body part
+function stsWidth = getSideToSide(time, output, index, plotFlag)
+% Computes mean side-to-side width (Z) using mid-foot (average of Foot & Toe)
+% Returns a single scalar and optionally plots it over time
 
-    fprintf('--- Side-to-Side Widths (Z axis) ---\n');
+fprintf('--- Trial %d : Side-to-Side Width (Mid-Foot: L - R, Z axis) ---\n', index);
 
-    parts = {'RFoot', 'LFoot', 'RToe', 'LToe'};
-    stsWidth = struct();  % store output
-
-    % Collect for plotting
-    Zmat = [];
-    labels = {};
-
-    for i = 1:numel(parts)
-        name = parts{i};
-
-        if isfield(output, name) && isfield(output.(name), 'Position_Z')
-            z = output.(name).Position_Z;
-            width = max(z) - min(z);
-
-            stsWidth.(name) = width;
-
-            fprintf('%s - Side-to-Side Width: %.3f m\n', name, width);
-
-            Zmat = [Zmat, z(:)];
-            labels{end+1} = name;
-        else
-            fprintf('%s - Missing Z data.\n', name);
-        end
+requiredFields = {'LFoot', 'LToe', 'RFoot', 'RToe'};
+for i = 1:numel(requiredFields)
+    if ~isfield(output, requiredFields{i}) || ...
+       ~isfield(output.(requiredFields{i}), 'Position_Z')
+        error('Missing Z data for %s.', requiredFields{i});
     end
-
-    % Optional: Plot all Z trajectories
-    plotSideToSide(time, Zmat, labels);
 end
 
-function plotSideToSide(time, Zmat, labels)
-% Helper to visualize Position_Z traces for limbs
+% Get individual Z signals
+zL_foot = output.LFoot.Position_Z;
+zL_toe  = output.LToe.Position_Z;
+zR_foot = output.RFoot.Position_Z;
+zR_toe  = output.RToe.Position_Z;
+
+% Mid-foot Z (averaged)
+zL_mean = (zL_foot + zL_toe) / 2;
+zR_mean = (zR_foot + zR_toe) / 2;
+
+% Difference signal: L - R
+zDiff = zR_mean - zL_mean;
+
+% Final reported metric
+meanDiff = mean(zDiff, 'omitnan');
+stsWidth = meanDiff;
+
+fprintf('Mean Mid-Foot Width (L - R): %.3f m\n', meanDiff);
+
+
+if plotFlag
+    % Plot differences
+    figure;
+    plot(time, zDiff, 'b');
+    xlabel('Time (s)');
+    ylabel('L - R Z Difference (m)');
+    title(sprintf('Trial %d -- Side-To-Side Width vs. Time (mid-foot)', index));
+    grid on;
+
+    % % Plot Z data raw
+    % parts = {'RFoot', 'LFoot', 'RToe', 'LToe'};
+    % Zmat = [];
+    % labels = {};
+    % 
+    % for i = 1:numel(parts)
+    %     part = parts{i};
+    %     if isfield(output, part) && isfield(output.(part), 'Position_Z')
+    %         Zmat = [Zmat, output.(part).Position_Z(:)];
+    %         labels{end+1} = part;
+    %     end
+    % end
+    % 
+    % plotZData(time, Zmat, labels);
+end
+    
+end
+
+
+function plotZData(time, Zmat, labels)
+% Plots Position_Z signals for multiple limbs
+% Inputs:
+% - time: time array
+% - Zmat: matrix of Z signals, one per column
+% - labels: cell array of corresponding labels
 
     if isempty(Zmat)
         disp('No Z data to plot.');
